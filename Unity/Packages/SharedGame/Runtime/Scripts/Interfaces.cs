@@ -21,7 +21,7 @@ namespace SharedGame {
 
         long ReadInputs(int controllerId);
 
-        void LogInfo(string filename);
+        void LogInfo(string filename, NativeArray<byte> data);
 
         void FreeBytes(NativeArray<byte> data);
     }

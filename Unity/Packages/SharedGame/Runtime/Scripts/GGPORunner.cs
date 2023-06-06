@@ -8,6 +8,7 @@ namespace SharedGame {
 
     public class GGPORunner : IGameRunner {
         private bool verbose;
+        private static int logLevel = 1; // 0 == nothing // 1 == important things // 2 == verbose // 3 == everything
 
         public int PlayerIndex { get; set; }
 
@@ -25,6 +26,9 @@ namespace SharedGame {
 
         private Stopwatch frameWatch = new Stopwatch();
         private Stopwatch idleWatch = new Stopwatch();
+        #if SYNC_TEST
+        private Random random = new Random();
+        #endif
 
         /*
          * The begin game callback.  We don't need to do anything special here,
@@ -130,11 +134,9 @@ namespace SharedGame {
          */
 
         private bool OnLogGameState(string filename, NativeArray<byte> data) {
-            LogGame($"OnLogGameState {filename}");
-            LogGame($"--Error-- Pretty sure this feature doesn't work properly");
+            LogGame($"OnLogGameState {filename} {data.Length}");
 
-            Game.FromBytes(data);
-            Game.LogInfo(filename);
+            Game.LogInfo(filename, data);
             return true;
         }
 
@@ -153,7 +155,7 @@ namespace SharedGame {
             Name = name;
             GGPO.SetLogDelegate(LogPlugin);
             Game = game;
-            LogPlugin("GameState Set " + Game);
+            LogPlugin(GGPO.LOG_INFO,"GameState Set " + Game);
             GameInfo = new GameInfo();
             perf = perfPanel;
         }
@@ -215,7 +217,22 @@ namespace SharedGame {
             // Initialize the game state
 
 #if SYNC_TEST
-            var result = ggpo_start_synctest(cb, GetName(), num_players, 1);
+            var result = GGPO.Session.StartSyncTest(
+                    OnBeginGameCallback,
+                    OnAdvanceFrameCallback,
+                    OnLoadGameStateCallback,
+                    OnLogGameState,
+                    OnSaveGameStateCallback,
+                    OnFreeBufferCallback,
+                    OnEventConnectedToPeerDelegate,
+                    OnEventSynchronizingWithPeerDelegate,
+                    OnEventSynchronizedWithPeerDelegate,
+                    OnEventRunningDelegate,
+                    OnEventConnectionInterruptedDelegate,
+                    OnEventConnectionResumedDelegate,
+                    OnEventDisconnectedFromPeerDelegate,
+                    OnEventEventcodeTimesyncDelegate,
+                    Name, num_players, localport);
 #else
             var result = GGPO.Session.StartSession(
                     OnBeginGameCallback,
@@ -331,7 +348,7 @@ namespace SharedGame {
 
         private void AdvanceFrame(long[] inputs, int disconnect_flags) {
             if (Game == null) {
-                LogPlugin("GameState is null what?");
+                LogPlugin(GGPO.LOG_INFO,"GameState is null what?");
             }
             Game.Update(inputs, disconnect_flags);
 
@@ -349,9 +366,9 @@ namespace SharedGame {
             int[] handles = new int[MAX_PLAYERS];
             int count = 0;
             for (int i = 0; i < GameInfo.players.Length; i++) {
-                if (GameInfo.players[i].type == GGPOPlayerType.GGPO_PLAYERTYPE_REMOTE) {
+                //if (GameInfo.players[i].type == GGPOPlayerType.GGPO_PLAYERTYPE_REMOTE) {
                     handles[count++] = GameInfo.players[i].handle;
-                }
+                //}
             }
 
             var statss = new GGPONetworkStats[count];
@@ -372,9 +389,10 @@ namespace SharedGame {
                 var player = GameInfo.players[i];
                 if (player.type == GGPOPlayerType.GGPO_PLAYERTYPE_LOCAL) {
                     var input = Game.ReadInputs(player.controllerId);
-#if SYNC_TEST
-     input = rand(); // test: use random inputs to demonstrate sync testing
-#endif
+                    #if SYNC_TEST
+                    // generate a random input
+                    input = random.Next();
+                    #endif
                     result = GGPO.Session.AddLocalInput(player.handle, input);
                 }
             }
@@ -443,7 +461,8 @@ namespace SharedGame {
             OnGameLog?.Invoke(value);
         }
 
-        public static void LogPlugin(string value) {
+        public static void LogPlugin(int level, string value) {
+            if(level > logLevel) return;
             OnPluginLog?.Invoke(value);
         }
     }

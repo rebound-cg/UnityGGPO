@@ -1,5 +1,7 @@
 using System;
+using System.IO;
 using System.Runtime.InteropServices;
+using System.Runtime.Serialization;
 
 namespace UnityGGPO {
 
@@ -21,6 +23,7 @@ namespace UnityGGPO {
         }
     }
 
+    [Serializable]
     public class GGPONetworkStats {
         public int send_queue_len;
         public int recv_queue_len;
@@ -28,10 +31,36 @@ namespace UnityGGPO {
         public int kbps_sent;
         public int local_frames_behind;
         public int remote_frames_behind;
+        
+
+        public void Deserialize(BinaryReader binaryReader)
+        {
+            send_queue_len = binaryReader.ReadInt32();
+            recv_queue_len = binaryReader.ReadInt32();
+            ping = binaryReader.ReadInt32();
+            kbps_sent = binaryReader.ReadInt32();
+            local_frames_behind = binaryReader.ReadInt32();
+            remote_frames_behind = binaryReader.ReadInt32();
+        }
+
+        public void Serialize(BinaryWriter binaryWriter)
+        {
+            binaryWriter.Write(send_queue_len);
+            binaryWriter.Write(recv_queue_len);
+            binaryWriter.Write(ping);
+            binaryWriter.Write(kbps_sent);
+            binaryWriter.Write(local_frames_behind);
+            binaryWriter.Write(remote_frames_behind);
+        }
     }
 
     public static partial class GGPO {
         private const string libraryName = "UnityGGPO";
+
+        public const int LOG_TESTS = 0;
+        public const int LOG_INFO = 1;
+        public const int LOG_DETAILS = 2;
+        public const int LOG_VERBOSE = 3;
 
         public const int MAX_PLAYERS = 4;
         public const int MAX_PREDICTION_FRAMES = 8;
@@ -125,7 +154,7 @@ namespace UnityGGPO {
             }
         }
 
-        public delegate void LogDelegate(string text);
+        public delegate void LogDelegate(int level, string text);
 
         public delegate bool BeginGameDelegate(string text);
 
@@ -152,6 +181,17 @@ namespace UnityGGPO {
 
         [DllImport(libraryName)]
         public static extern int UggTestStartSession(out IntPtr session,
+            IntPtr beginGame,
+            IntPtr advanceFrame,
+            IntPtr loadGameState,
+            IntPtr logGameState,
+            IntPtr saveGameState,
+            IntPtr freeBuffer,
+            IntPtr onEvent,
+            string game, int num_players, int localport);
+
+        [DllImport(libraryName)]
+        private static extern int UggStartSyncTest(out IntPtr session,
             IntPtr beginGame,
             IntPtr advanceFrame,
             IntPtr loadGameState,
@@ -232,6 +272,18 @@ namespace UnityGGPO {
         public static void SetLogDelegate(LogDelegate callback) {
             _logDelegate = callback != null ? Marshal.GetFunctionPointerForDelegate(callback) : IntPtr.Zero;
             UggSetLogDelegate(_logDelegate);
+        }
+
+        public static int StartSyncTest(out IntPtr session,
+                IntPtr beginGame,
+                IntPtr advanceFrame,
+                IntPtr loadGameState,
+                IntPtr logGameState,
+                IntPtr saveGameState,
+                IntPtr freeBuffer,
+                IntPtr onEvent,
+                string game, int num_players, int localport) {
+            return UggStartSyncTest(out session, beginGame, advanceFrame, loadGameState, logGameState, saveGameState, freeBuffer, onEvent, game, num_players, localport);
         }
 
         public static int StartSession(out IntPtr session,

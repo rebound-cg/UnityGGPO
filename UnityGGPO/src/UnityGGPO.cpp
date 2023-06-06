@@ -10,7 +10,7 @@
 
 constexpr auto PLUGIN_VERSION = "1.0.0.0";
 constexpr auto PLUGIN_BUILD_NUMBER = 1;
-int logLevel = 1; // 0 == nothing // 1 == important things // 2 == verbose // 3 == everything
+int logLevel = 3; // 0 == nothing // 1 == important things // 2 == verbose // 3 == everything
 
 const int LOG_TESTS = 0;
 const int LOG_INFO = 1;
@@ -22,7 +22,7 @@ LogDelegate uggLogCallback = nullptr;
 void UggCallLog(int level, const char* text)
 {
     if (logLevel >= level && uggLogCallback) {
-        uggLogCallback(text);
+        uggLogCallback(level, text);
     }
 }
 
@@ -130,6 +130,33 @@ PLUGINEX(int) UggTestStartSession(GGPOPtr& sessionRef,
     TestAllDelegates(cb);
     GGPOSession* ggpo;
     auto ret = ggpo_start_session(&ggpo, &cb, game, num_players, sizeof(uint64_t), localport);
+    sessionRef = (GGPOPtr)ggpo;
+    return ret;
+}
+
+PLUGINEX(int) UggStartSyncTest(GGPOPtr& sessionRef,
+    BeginGameDelegate beginGame,
+    AdvanceFrameDelegate advanceFrame,
+    LoadGameStateDelegate loadGameState,
+    LogGameStateDelegate logGameState,
+    SaveGameStateDelegate saveGameState,
+    FreeBufferDelegate freeBuffer,
+    OnEventDelegate onEvent,
+    char* game, int num_players, int localport)
+{            
+    UggCallLogv(LOG_INFO, "UggStartSyncTest - %s %i %i", game, num_players, localport);
+    GGPOSessionCallbacks cb;
+    cb.advance_frame = advanceFrame;
+    cb.load_game_state = loadGameState;
+    cb.begin_game = beginGame;
+    cb.save_game_state = saveGameState;
+    cb.load_game_state = loadGameState;
+    cb.log_game_state = logGameState;
+    cb.free_buffer = freeBuffer;
+    cb.on_event = onEvent;
+
+    GGPOSession* ggpo;
+    auto ret = ggpo_start_synctest(&ggpo, &cb, game, num_players, sizeof(int), 1);
     sessionRef = (GGPOPtr)ggpo;
     return ret;
 }
