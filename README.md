@@ -1,6 +1,8 @@
+Fork from https://github.com/nykwil/UnityGGPO.git
+
 # UnityGGPO
 
-This is home of UnityGGPO an interop DLL of the ggpo library that works with Unity 3D. This repository is and an amalgam of a few things if you are looking for just the Plugin or the Shared Game Library see Packages section below UPM git url is https://github.com/nykwil/UnityGGPO.git?path=/Unity/Packages/UnityGGPO
+This is home of UnityGGPO an interop DLL of the ggpo library that works with Unity 3D. This repository is and an amalgam of a few things if you are looking for just the Plugin or the Shared Game Library see Packages section below UPM git url is https://github.com/rebound-cg/UnityGGPO.git?path=/Unity/Packages/UnityGGPO
 
 ## Contents
 - A Unity project (/Unity) containing.
@@ -21,13 +23,13 @@ Two ways to use:
 - Use the GGPO.Session helper class to have safe access using Unity's native collections library and delegates.
 
 Add to your project in the Package Manager using "Add package from git URL..." with this URL:
-https://github.com/nykwil/UnityGGPO.git?path=/Unity/Packages/UnityGGPO
+https://github.com/rebound-cg/UnityGGPO.git?path=/Unity/Packages/UnityGGPO
 
 ### Share Game Library
-This is some boiler plate game layer so that you can create local and multiplayer enabled games with just some simple interfaces implementations. Includes very basic UI and Dialogs for the game. Also has an implementation of the Performance Dialog which you need in some capapcity to run. See the EcsWar of VectorWar examples at https://github.com/nykwil/UnityGGPO. For more information. 
+This is some boiler plate game layer so that you can create local and multiplayer enabled games with just some simple interfaces implementations. Includes very basic UI and Dialogs for the game. Also has an implementation of the Performance Dialog which you need in some capapcity to run. See the EcsWar of VectorWar examples at https://github.com/rebound-cg/UnityGGPO. For more information. 
 
 Add to your project in the Package Manager using "Add package from git URL..." with this URL:
-https://github.com/nykwil/UnityGGPO.git?path=/Unity/Packages/SharedGame
+https://github.com/rebound-cg/UnityGGPO.git?path=/Unity/Packages/SharedGame
 
 ## Examples and Tests
 ### VectorWar
